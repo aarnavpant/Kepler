@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kepler/helper/helperFunctions.dart';
 import 'package:kepler/services/auth.dart';
+import 'package:kepler/services/database.dart';
 import 'package:kepler/views/Chatroom.dart';
 import 'package:kepler/widgets/widget.dart';
 import 'package:flutter/material.dart';
@@ -14,16 +17,30 @@ class SignIn extends StatefulWidget {
 class _SignInState extends State<SignIn> {
 
   bool isLoading = false;
+  QuerySnapshot snapshotUserInfo;
+
   AuthMethod authMethod = new AuthMethod();
+  DatabaseMethods databaseMethods = new DatabaseMethods();
   TextEditingController emailTextEditor = new TextEditingController();
   TextEditingController passTextEditor  = new TextEditingController();
   signMeIn()
   {
+    HelperFunctions.saveUserEmailSharedPreference(emailTextEditor.text);
     setState(() {
       isLoading = true;
     });
+    databaseMethods.getUserByUserEmail(emailTextEditor.text)
+    .then((val){
+        snapshotUserInfo = val;
+        HelperFunctions
+            .saveUserNameSharedPreference(snapshotUserInfo.docs[0]["name"]);
+    });
     authMethod.signInWithEmailAndPassword(emailTextEditor.text, passTextEditor.text).then((value) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ChatRoom()));
+      if(value != null)
+        {
+          HelperFunctions.saveUserLoggedInSharedPreference(true);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ChatRoom()));
+        }
     });
   }
 
@@ -32,7 +49,9 @@ class _SignInState extends State<SignIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBarMain(context),
-      body: SingleChildScrollView(
+      body: isLoading?Container(
+        child: Center(child: CircularProgressIndicator()),
+      ): SingleChildScrollView(
         child: Container(
           height: MediaQuery.of(context).size.height,
           alignment: Alignment.center,

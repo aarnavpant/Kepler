@@ -1,6 +1,7 @@
 
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kepler/helper/helperFunctions.dart';
 import 'package:kepler/services/auth.dart';
 import 'package:kepler/services/database.dart';
 import 'package:kepler/views/Chatroom.dart';
@@ -35,6 +36,9 @@ class _SignUpState extends State<SignUp> {
           "name" : userTextEditController.text,
           "email" : emailTextEditController.text
         };
+        HelperFunctions.saveUserEmailSharedPreference(emailTextEditController.text);
+        HelperFunctions.saveUserNameSharedPreference(userTextEditController.text);
+        
         setState(() {
           isLoading = true;
         });
@@ -42,6 +46,7 @@ class _SignUpState extends State<SignUp> {
         authMethods.signUpWithEmailAndPassword(emailTextEditController.text, passTextEditController.text).then((val){
           //print("${val.uId}");
           databaseMethods.uploadUserInfo(userInfoMap);
+          HelperFunctions.saveUserLoggedInSharedPreference(true);
           Navigator.pushReplacement(context, MaterialPageRoute(
               builder: (context) => ChatRoom()
           ));
